@@ -6,9 +6,27 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 
+/**
+ * 用户认证
+ * Class SessionsController
+ * @package App\Http\Controllers
+ */
 class SessionsController extends Controller
 {
+
     /**
+     * 用Auth 中间件提供的 guest 选项，限制未登录用户只能访问登录页面
+     * SessionsController constructor.
+     */
+    public function __construct()
+    {
+        $this->middleware('guest',[
+            'only' => ['create']
+        ]);
+    }
+
+    /**
+     * 展示登录页面
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function create()
@@ -17,6 +35,7 @@ class SessionsController extends Controller
     }
 
     /**
+     * 登录，验证用户登录信息
      * @param Request $request
      *  email
      *  password
@@ -31,13 +50,17 @@ class SessionsController extends Controller
 
         if (Auth::attempt($credentials,$request->has('remember'))) {
             session()->flash('success', '欢迎回来！');
-            return redirect()->route('users.show', [Auth::user()]);
+            return redirect()->intended(route('users.show', [Auth::user()]));
         } else {
             session()->flash('danger', '你的邮箱和密码不匹配。');
             return redirect()->back();
         }
     }
 
+    /**
+     * 退出登录
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function destroy()
     {
         Auth::logout();
