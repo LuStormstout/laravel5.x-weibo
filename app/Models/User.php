@@ -33,6 +33,17 @@ class User extends Authenticatable
     ];
 
     /**
+     * 监听 创建用户的时候生成邮箱验证的令牌
+     */
+    public static function boot()
+    {
+        parent::boot();
+        static::creating(function ($user) {
+            $user->activation_token = str_random(30);
+        });
+    }
+
+    /**
      * get user photo by email on gravatar.com
      * @param string $size
      * @return string
