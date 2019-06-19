@@ -24,6 +24,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property int $is_admin
  * @property string|null $activation_token
  * @property int $activated
+ * @property int $followings
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\User whereActivated($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\User whereActivationToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\User whereCreatedAt($value)
@@ -103,11 +104,73 @@ class User extends Authenticatable
 
     /**
      * 当前用户发布过的所有微博
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return mixed
      */
     public function feed()
     {
-        return $this->statuses()
+        $user_ids = \Auth::user()->followings->pluck('id')->toArray();
+        array_push($user_ids, \Auth::user()->id);
+        return Status::whereIn('user_id', $user_ids)
+            ->with('user')
             ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * 在 Laravel 中会默认将两个关联模型的名称进行合并，并按照字母排序，因此我们生成的关联关系表名称会是 user_user。我们也可以自定义生成的名称，把关联表名改为 followers
+     * belongsToMany 方法的第三个参数 user_id 是定义在关联中的模型外键名，而第四个参数 follower_id 则是要合并的模型外键名
+     */
+
+    /**
+     * 一个用户能够拥有多个粉丝
+     * $user->followers(); 来获取粉丝关系列表
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id');
+    }
+
+    /**
+     * 一个用户可以关注多人
+     * $user->followings(); 来获取用户关注人列表
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function followings()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'user_id');
+    }
+
+    /**
+     * 关注
+     * @param $user_ids
+     */
+    public function follow($user_ids)
+    {
+        if (!is_array($user_ids)) {
+            $user_ids = compact('user_ids');
+        }
+        $this->followings()->sync($user_ids, false);
+    }
+
+    /**
+     * 取消关注
+     * @param $user_ids
+     */
+    public function unfollow($user_ids)
+    {
+        if (!is_array($user_ids)) {
+            $user_ids = compact('user_ids');
+        }
+        $this->followings()->detach($user_ids);
+    }
+
+    /**
+     * 是否关注了某人
+     * @param $user_id
+     * @return mixed
+     */
+    public function isFollowing($user_id)
+    {
+        return $this->followings->contains($user_id);
     }
 }

@@ -1,7 +1,7 @@
 <header class="navbar navbar-fixed-top navbar-inverse">
     <div class="container">
         <div class="col-md-offset-1 col-md-10">
-            <a href="{{ route('home') }}" id="logo">Jacklu Laravel</a>
+            <a href="{{ route('home') }}" id="logo">TuLaYang</a>
             <nav>
                 <ul class="nav navbar-nav navbar-right">
                     @if(Auth::check())
@@ -19,15 +19,17 @@
                                         <form action="{{ route('logout') }}" method="POST">
                                             {{ csrf_field() }}
                                             {{ method_field('DELETE') }}
-                                            <button class="btn btn-block btn-danger" type="submit" name="button">退出</button>
+                                            <button class="btn btn-block btn-danger" type="submit" name="button">退出
+                                            </button>
                                         </form>
                                     </a>
                                 </li>
                             </ul>
                         </li>
+                    @else
+                        <li><a href="{{ route('help') }}">帮助</a></li>
+                        <li><a href="{{ route('login') }}">登录</a></li>
                     @endif
-                    <li><a href="{{ route('help') }}">帮助</a></li>
-                    <li><a href="{{ route('login') }}">登录</a></li>
                 </ul>
             </nav>
         </div>
